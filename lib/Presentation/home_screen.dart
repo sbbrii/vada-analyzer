@@ -1,8 +1,13 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
+
+const String YOUR_IMAGGA_API_KEY = 'acc_b6c4b2aff109ac7';
+const String YOUR_IMAGGA_API_SECRET = '303b341046115911bbce5b2769e9d4b9';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,37 +32,56 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
   }
-
+  
   Future<void> _analyzeVada() async {
     if (_imageFile == null) return;
+    if (YOUR_IMAGGA_API_KEY == 'PASTE_YOUR_IMAGGA_API_KEY_HERE' ||
+        YOUR_IMAGGA_API_SECRET == 'PASTE_YOUR_IMAGGA_API_SECRET_HERE') {
+      setState(() {
+        _roastResult = "Hold on! You need to add your Imagga API Key and Secret to the code first.";
+      });
+      return;
+    }
 
     setState(() {
       _isAnalyzing = true;
-      _roastResult = "Hmm, examining the specimen...";
+      _roastResult = "Hmm, sending to Imagga for expert roasting...";
     });
 
     try {
-      final inputImage = InputImage.fromFilePath(_imageFile!.path);
+      // 1. Create the multipart request
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('https://api.imagga.com/v2/tags'));
 
-      final objectDetector = ObjectDetector(
-        options: ObjectDetectorOptions(
-          mode: DetectionMode.single,
-          classifyObjects: true,
-          multipleObjects: false,
-        ),
-      );
+      // 2. Attach the image file
+      request.files.add(await http.MultipartFile.fromPath('image', _imageFile!.path));
+      
+      // 3. Add the authorization header
+      String basicAuth = 'Basic ${base64Encode(utf8.encode('$YOUR_IMAGGA_API_KEY:$YOUR_IMAGGA_API_SECRET'))}';
+      request.headers['Authorization'] = basicAuth;
 
-      final List<DetectedObject> objects = await objectDetector.processImage(inputImage);
-      objectDetector.close();
+      // 4. Send the request and get the response
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
 
-      if (objects.isEmpty) {
-        _roastResult = _getRoastForFailure();
+      // 5. Parse the response
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(responseBody);
+        final List tags = responseData['result']['tags'];
+        
+        if (tags.isEmpty) {
+          _roastResult = _getRoastForFailure(tags);
+        } else {
+          _roastResult = _generateRoast(tags);
+        }
       } else {
-        final mainObject = objects.first;
-        _roastResult = _generateRoast(mainObject);
+        // Handle API errors
+        final errorData = jsonDecode(responseBody);
+        _roastResult = "Imagga API Error: ${errorData['status']['text']}";
       }
+
     } catch (e) {
-      _roastResult = "An error occurred during analysis. Is this vada cursed?";
+      _roastResult = "An error occurred during analysis. Is your internet okay?";
     } finally {
       setState(() {
         _isAnalyzing = false;
@@ -65,41 +89,70 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _generateRoast(DetectedObject obj) {
-    final boundingBox = obj.boundingBox;
-    final double aspectRatio = boundingBox.width / boundingBox.height;
 
-    final hasFoodLabel = obj.labels.any((label) =>
-        label.text.toLowerCase().contains('food') ||
-        label.text.toLowerCase().contains('cake') ||
-        label.text.toLowerCase().contains('doughnut'));
-
-    if (aspectRatio > 1.5 || aspectRatio < 0.65) {
-      return "That's not a vada, that's a continental drift. Did you drop it from space?";
+  String _generateRoast(List tags) {
+    // Helper function to check for a tag's presence
+    bool hasTag(String tagName) {
+      return tags.any((tag) => tag['tag']['en'] == tagName);
+    }
+    
+    // Helper function to get a tag's confidence
+    double getConfidence(String tagName) {
+      var tag = tags.firstWhere((t) => t['tag']['en'] == tagName, orElse: () => null);
+      return tag != null ? tag['confidence'] : 0.0;
     }
 
-    if (hasFoodLabel) {
-      return "Okay, it MIGHT be a vada... but its shape is giving me an identity crisis. Did it have a rough day?";
+    bool isVada = hasTag('doughnut') || hasTag('bagel');
+    bool isFood = hasTag('food') || hasTag('snack') || hasTag('pastry');
+    double roundness = getConfidence('round');
+
+    // --- Tiered Roasting Logic ---
+
+    // Category 1: It's a vada, but the shape is questionable
+    if (roundness >65 && isFood ) {
+      final roasts = [
+        "This vada looks like it tried to be a circle but gave up. A for effort, C- for geometry.",
+        "I've seen rounder things. My cat, for example. When she's sleeping."
+      ];
+      return roasts[Random().nextInt(roasts.length)];
     }
 
-    final List<String> roasts = [
-      "Is this a vada or an asteroid belt? The hole is... ambitious.",
-      "NASA called, they want their satellite image back. The crater in the middle is of particular interest.",
-      "This vada looks like it gave up halfway through being a circle. A for effort, C- for geometry.",
-      "Perfectly symmetrical... if you squint. From another room. In the dark.",
-      "I've seen rounder things. My cat, for example. When she's sleeping.",
-      "This vada has character. And by character, I mean a complete disregard for the laws of physics and circles."
-    ];
 
-    return roasts[Random().nextInt(roasts.length)];
+    
+
+    // Category 2: It's a pretty good vada! Give a backhanded compliment.
+    if (isVada) {
+      final roasts = [
+        "Wow, a perfectly good vada. I'm almost disappointed I have nothing to roast. Almost.",
+        "It's... acceptable. The hole is centered. The shape is round. Are you a professional?",
+        "This is a textbook vada. So perfect it's almost boring. Good job, I guess."
+      ];
+      return roasts[Random().nextInt(roasts.length)];
+    }
+
+    // Category 3: It's food, but probably not a vada.
+    if (isFood) {
+      final roasts = [
+        "Okay, it's food. But a vada? That's a stretch. Is that a cookie?",
+        "I detect a snack, but the iconic hole is missing. This is an imposter!",
+        "This looks more like a potato pancake that got lost. Good effort though."
+      ];
+      return roasts[Random().nextInt(roasts.length)];
+    }
+
+    // Category 4: This isn't food at all.
+    return _getRoastForFailure(tags);
   }
+  
+  String _getRoastForFailure(List tags) {
+     // Try to get the top tag to make the roast more specific
+     String topTag = tags.isNotEmpty ? tags.first['tag']['en'] : 'a blurry shape';
 
-  String _getRoastForFailure() {
-    final List<String> failureRoasts = [
-      "My AI is confused. Are you sure that's a vada? It looks more like a modern art installation.",
-      "Analysis failed. The object in the photo is beyond my comprehension. Is it... abstract?",
-      "I can't detect a vada here. I see a blurry shape and a lot of hope. Better luck next time!",
-      "Either that's not a vada, or it's so powerful it broke my algorithm."
+     final List<String> failureRoasts = [
+      "My AI is confused. It thinks this is a '$topTag'. Are you sure that's a vada?",
+      "Analysis failed. The object in the photo is beyond my comprehension. Is it... modern art?",
+      "I can't detect a vada here. I see $topTag and a lot of hope. Better luck next time!",
+      "The cloud has spoken: 'What IS that thing?'. Try a different picture."
     ];
     return failureRoasts[Random().nextInt(failureRoasts.length)];
   }
