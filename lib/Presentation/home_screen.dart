@@ -17,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   File? _imageFile;
-  String _roastResult = "Let's see that vada!";
+  String _roastResult = "Let's see that വട!";
   bool _isAnalyzing = false;
 
   Future<void> _pickImage(ImageSource source) async {
@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
-        _roastResult = "Ready when you are. Hit 'Analyze'!";
+        _roastResult = "ഇതിൽ അമർത്തു 👆🏿";
       });
     }
   }
@@ -117,8 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Category 1: It's a vada, but the shape is questionable
     if (roundness > 65 && isFood) {
-      final roasts = ["ഇതെന്തു കുഴിയില്ലാത്ത വടയോ 😂😂",
-      "ഇതിൽ കുഴിയെവടെ മോനെ 🥹"
+      final roasts = [
+        "ഇതെന്തു കുഴിയില്ലാത്ത വടയോ 😂😂",
+        "ഇതിൽ കുഴിയെവടെ മോനെ 🥹",
       ];
       return roasts[Random().nextInt(roasts.length)];
     }
@@ -161,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
       "എന്തുവാ മോനെ ഇത് 😭",
       "വട കണ്ടെത്താനായില്ല. $topTag മാത്രം കാണുന്നു😭",
       "നിന്നക്ക് മാനസികമായി എന്തെങ്കിലും തകരാർ ഉണ്ടോ",
-      "വെച്ചേച് വേറെ വെല്ലോ പണിക്കും പോടാ 😍"
+      "വെച്ചേച് വേറെ വെല്ലോ പണിക്കും പോടാ 😍",
     ];
     return failureRoasts[Random().nextInt(failureRoasts.length)];
   }
@@ -172,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'വട Roaster',
+            'വട ?',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
@@ -188,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   height: 400,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.grey[300]!, width: 2),
                     boxShadow: [
@@ -213,8 +214,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Image.asset(
                             'assets/vada_placeholder.png',
                             fit: BoxFit.contain,
-                            width: 200,
-                            height: 200,
+                            width: 400,
+                            height: 400,
                           ),
                         ),
                 ),
@@ -236,12 +237,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.whatshot),
-                  label: const Text('ANALYZE വട'),
-                  onPressed: (_imageFile != null && !_isAnalyzing)
-                      ? _analyzeVada
-                      : null,
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.yellow[700],
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     textStyle: const TextStyle(
                       fontSize: 18,
@@ -252,6 +250,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     elevation: 5,
                   ),
+                  label: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.whatshot, size: 22),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'ANALYZE',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      const Text('വട', style: TextStyle(fontSize: 22)),
+                    ],
+                  ),
+                  onPressed: (_imageFile != null && !_isAnalyzing)
+                      ? _analyzeVada
+                      : null,
                 ),
                 const SizedBox(height: 30),
                 _isAnalyzing
