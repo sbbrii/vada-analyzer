@@ -11,7 +11,7 @@ class ScreenSplash extends StatefulWidget {
 class _ScreenSplashState extends State<ScreenSplash> {
   @override
   void initState() {
-    super.initState(); 
+    super.initState();
     waitSplash();
   }
 
@@ -21,26 +21,25 @@ class _ScreenSplashState extends State<ScreenSplash> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
-          child: 
-          Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              
               SizedBox(
                 //height: 100,width: 50,
-                child: Image(image: AssetImage('assets/Loading.gif'))
-                ),
-              Text('Loading..',style: TextStyle(fontSize: 20),)
+                child: Image(image: AssetImage('assets/Loading.gif')),
+              ),
             ],
-          )
+          ),
         ),
       ),
     );
   }
 
   waitSplash() async {
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 4));
     if (!mounted) return;
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomeScreen()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => HomeScreen()));
   }
 }
