@@ -4,9 +4,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-const String YOUR_IMAGGA_API_KEY = 'acc_b6c4b2aff109ac7';
-const String YOUR_IMAGGA_API_SECRET = '303b341046115911bbce5b2769e9d4b9';
+const String yourImaggaApiKey = 'acc_b6c4b2aff109ac7';
+const String yourImaggaApiSecret = '303b341046115911bbce5b2769e9d4b9';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,23 @@ class _HomeScreenState extends State<HomeScreen> {
   File? _imageFile;
   String _roastResult = "Let's see that വട!";
   bool _isAnalyzing = false;
+  final AudioPlayer audioPlayer = AudioPlayer();
+  String _currentAudioPath = '';
+
+  // --- Audio Playback Logic ---
+  Future<void> _playRoastAudio(String audioPath) async {
+    try {
+      // Stop any previous audio
+      await audioPlayer.stop();
+      // Play the new audio from assets
+      await audioPlayer.play(AssetSource(audioPath));
+      // Store the path to allow for replay
+      _currentAudioPath = audioPath;
+    } catch (e) {
+      // Don't crash the app if audio fails to play
+      // Could use a logging framework here in production
+    }
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
@@ -34,8 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _analyzeVada() async {
     if (_imageFile == null) return;
-    if (YOUR_IMAGGA_API_KEY == 'PASTE_YOUR_IMAGGA_API_KEY_HERE' ||
-        YOUR_IMAGGA_API_SECRET == 'PASTE_YOUR_IMAGGA_API_SECRET_HERE') {
+    if (yourImaggaApiKey == 'PASTE_YOUR_IMAGGA_API_KEY_HERE' ||
+        yourImaggaApiSecret == 'PASTE_YOUR_IMAGGA_API_SECRET_HERE') {
       setState(() {
         _roastResult =
             "Hold on! You need to add your Imagga API Key and Secret to the code first.";
@@ -45,48 +63,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       _isAnalyzing = true;
-      _roastResult = "Hmm, sending to Imagga for expert roasting...";
+      _roastResult = "Hmm, analyzing the specimen...";
     });
 
     try {
-      // 1. Create the multipart request
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('https://api.imagga.com/v2/tags'),
       );
-
-      // 2. Attach the image file
       request.files.add(
         await http.MultipartFile.fromPath('image', _imageFile!.path),
       );
-
-      // 3. Add the authorization header
       String basicAuth =
-          'Basic ${base64Encode(utf8.encode('$YOUR_IMAGGA_API_KEY:$YOUR_IMAGGA_API_SECRET'))}';
+          'Basic ${base64Encode(utf8.encode('$yourImaggaApiKey:$yourImaggaApiSecret'))}';
       request.headers['Authorization'] = basicAuth;
 
-      // 4. Send the request and get the response
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
-      // 5. Parse the response
       if (response.statusCode == 200) {
         final responseData = jsonDecode(responseBody);
         final List tags = responseData['result']['tags'];
 
-        if (tags.isEmpty) {
-          _roastResult = _getRoastForFailure(tags);
-        } else {
-          _roastResult = _generateRoast(tags);
-        }
+        final roast = tags.isEmpty
+            ? _getRoastForFailure(tags)
+            : _generateRoast(tags);
+
+        setState(() {
+          _roastResult = roast['text']!;
+        });
+        _playRoastAudio(roast['audio']!);
       } else {
-        // Handle API errors
         final errorData = jsonDecode(responseBody);
-        _roastResult = "Imagga API Error: ${errorData['status']['text']}";
+        setState(() {
+          _roastResult = "Imagga API Error: ${errorData['status']['text']}";
+        });
       }
     } catch (e) {
-      _roastResult =
-          "An error occurred during analysis. Is your internet okay?";
+      setState(() {
+        _roastResult =
+            "An error occurred during analysis. Is your internet okay?";
+      });
     } finally {
       setState(() {
         _isAnalyzing = false;
@@ -94,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _generateRoast(List tags) {
+  Map<String, String> _generateRoast(List tags) {
     // Helper function to check for a tag's presence
     bool hasTag(String tagName) {
       return tags.any((tag) => tag['tag']['en'] == tagName);
@@ -118,8 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // Category 1: It's a vada, but the shape is questionable
     if (roundness > 65 && isFood) {
       final roasts = [
-        "ഇതെന്തു കുഴിയില്ലാത്ത വടയോ 😂😂",
-        "ഇതിൽ കുഴിയെവടെ മോനെ 🥹",
+        {"text": "ഇതെന്തു കുഴിയില്ലാത്ത വടയോ 😂😂", "audio": "audio/kuzhi.mp3"},
+        {"text": "ഇതിൽ കുഴിയെവടെ മോനെ 🥹", "audio": "audio/kuzhi.mp3"},
       ];
       return roasts[Random().nextInt(roasts.length)];
     }
@@ -127,10 +144,16 @@ class _HomeScreenState extends State<HomeScreen> {
     // Category 2: It's a pretty good vada! Give a backhanded compliment.
     if (isVada) {
       final roasts = [
-        "കിടിലൻ വട മുത്തേ 🔥🙏🏻",
-        "ഈ വട ഉണ്ടാക്കിയവൻ ഒരു കേമൻ തന്നെ 🔥",
-        "വട കണ്ടപ്പോ തന്നെ charge ആയി 💥",
-        "ഇതൊക്കെയാണ് വട 🫡",
+        {"text": "കിടിലൻ വട മുത്തേ 🔥🙏🏻", "audio": "audio/nice_vada.mp3"},
+        {
+          "text": "ഈ വട ഉണ്ടാക്കിയവൻ ഒരു കേമൻ തന്നെ 🔥",
+          "audio": "audio/nice_vada.mp3",
+        },
+        {
+          "text": "വട കണ്ടപ്പോ തന്നെ charge ആയി 💥",
+          "audio": "audio/nice_vada.mp3",
+        },
+        {"text": "ഇതൊക്കെയാണ് വട 🫡", "audio": "audio/nice_vada.mp3"},
       ];
       return roasts[Random().nextInt(roasts.length)];
     }
@@ -138,9 +161,11 @@ class _HomeScreenState extends State<HomeScreen> {
     // Category 3: It's food, but probably not a vada.
     if (isFood) {
       final roasts = [
-        "",
-        "ഇതാരാടാ നിന്നോട് വടയാന്നെന്ന് പറഞ്ഞെ 😭🙏🏻",
-        "പറ്റിക്കാൻ നോക്കുന്നോടാ 😡",
+        {
+          "text": "ഇതാരാടാ നിന്നോട് വടയാന്നെന്ന് പറഞ്ഞെ 😭🙏🏻",
+          "audio": "audio/pattikkan.mp3",
+        },
+        {"text": "പറ്റിക്കാൻ നോക്കുന്നോടാ 😡", "audio": "audio/pattikkan.mp3"},
       ];
       return roasts[Random().nextInt(roasts.length)];
     }
@@ -149,20 +174,35 @@ class _HomeScreenState extends State<HomeScreen> {
     return _getRoastForFailure(tags);
   }
 
-  String _getRoastForFailure(List tags) {
+  Map<String, String> _getRoastForFailure(List tags) {
     String topTag = tags.isNotEmpty
         ? tags.first['tag']['ml'] ?? tags.first['tag']['en']
         : 'ഒരു മങ്ങൽ ആകൃതി';
 
-    final List<String> failureRoasts = [
-      "$topTag'ഇന്റെ photo അയച്ചു പറ്റിക്കാൻ നോക്കുന്നോ",
-      "ഇതൊക്കെയാണ് വട 🫡",
-      "ഇതാരാടാ നിന്നോട് വടയാന്നെന്ന് പറഞ്ഞെ 😭🙏🏻",
-      "അഹ് ബെസ്റ്റ്....",
-      "എന്തുവാ മോനെ ഇത് 😭",
-      "വട കണ്ടെത്താനായില്ല. $topTag മാത്രം കാണുന്നു😭",
-      "നിന്നക്ക് മാനസികമായി എന്തെങ്കിലും തകരാർ ഉണ്ടോ",
-      "വെച്ചേച് വേറെ വെല്ലോ പണിക്കും പോടാ 😍",
+    final List<Map<String, String>> failureRoasts = [
+      {
+        "text": "$topTag'ഇന്റെ photo അയച്ചു പറ്റിക്കാൻ നോക്കുന്നോ",
+        "audio": "audio/entho_thakarar.mp3",
+      },
+      {"text": "ഇതൊക്കെയാണ് വട 🫡", "audio": "audio/entho_thakarar.mp3"},
+      {
+        "text": "ഇതാരാടാ നിന്നോട് വടയാന്നെന്ന് പറഞ്ഞെ 😭🙏🏻",
+        "audio": "audio/entho_thakarar.mp3",
+      },
+      {"text": "അഹ് ബെസ്റ്റ്....", "audio": "audio/entho_thakarar.mp3"},
+      {"text": "എന്തുവാ മോനെ ഇത് 😭", "audio": "audio/entho_thakarar.mp3"},
+      {
+        "text": "വട കണ്ടെത്താനായില്ല. $topTag മാത്രം കാണുന്നു😭",
+        "audio": "audio/entho_thakarar.mp3",
+      },
+      {
+        "text": "നിന്നക്ക് മാനസികമായി എന്തെങ്കിലും തകരാർ ഉണ്ടോ",
+        "audio": "audio/entho_thakarar.mp3",
+      },
+      {
+        "text": "വെച്ചേച് വേറെ വെല്ലോ പണിക്കും പോടാ 😍",
+        "audio": "audio/entho_thakarar.mp3",
+      },
     ];
     return failureRoasts[Random().nextInt(failureRoasts.length)];
   }
@@ -178,6 +218,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           centerTitle: true,
           elevation: 2,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.volume_up),
+              onPressed: () {
+                if (_currentAudioPath.isNotEmpty && !_isAnalyzing) {
+                  _playRoastAudio(_currentAudioPath);
+                }
+              },
+              tooltip: 'Replay Roast',
+            ),
+          ],
         ),
         body: SingleChildScrollView(
           child: Padding(
@@ -194,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     border: Border.all(color: Colors.grey[300]!, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
+                        color: Colors.grey.withValues(alpha: 0.2),
                         spreadRadius: 2,
                         blurRadius: 8,
                         offset: const Offset(0, 4),
@@ -277,10 +328,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     : Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                          color: Colors.orange.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
-                            color: Colors.orange.withOpacity(0.3),
+                            color: Colors.orange.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(

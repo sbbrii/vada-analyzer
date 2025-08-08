@@ -7,20 +7,25 @@ environment:
   sdk: ^3.8.1
 
 dependencies:
+  audioplayers: ^6.5.0
   flutter:
     sdk: flutter
   google_mlkit_commons: ^0.11.0
   http: ^1.5.0
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  image_picker: ^1.0.7
   google_mlkit_object_detection: ^0.15.0
   
 flutter:
   uses-material-design: true
   assets:
-    - assets\Loading.gif
-    - assets\vada_placeholder.png
+    - assets/Loading.gif
+    - assets/vada_placeholder.png
+    - assets/audio/nice_vada.mp3
+    - assets/audio/entho_thakarar.mp3
+    - assets/audio/pattikkan.mp3
+    - assets/audio/kuzhi.mp3

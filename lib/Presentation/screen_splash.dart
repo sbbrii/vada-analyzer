@@ -17,18 +17,30 @@ class _ScreenSplashState extends State<ScreenSplash> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                //height: 100,width: 50,
-                child: Image(image: AssetImage('assets/Loading.gif')),
-              ),
-            ],
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'വട?',
+                  style: TextStyle(
+                    fontSize: 100,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 24),
+                SizedBox(
+                  // height: 250,
+                  // width: 500,
+                  child: Image(image: AssetImage('assets/Loading.gif')),
+                ),
+              ],
+            ),
           ),
         ),
       ),
