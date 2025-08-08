@@ -6,8 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-const String yourImaggaApiKey = 'acc_b6c4b2aff109ac7';
-const String yourImaggaApiSecret = '303b341046115911bbce5b2769e9d4b9';
+const String yourImaggaApiKey = 'acc_2b20c3e956b8817';
+const String yourImaggaApiSecret = 'b063163f2a3ecb0ed8997e89c9c31867';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
