@@ -101,25 +101,62 @@ flutter run
 ### Project Documentation
 For Software:
 
-# Screenshots (Add at least 3)
-![Screenshot1](Add screenshot 1 here with proper name)
-*Add caption explaining what this shows*
+# Screenshots 
 
-![Screenshot2](Add screenshot 2 here with proper name)
-*Add caption explaining what this shows*
 
-![Screenshot3](Add screenshot 3 here with proper name)
-*Add caption explaining what this shows*
+![WhatsApp Image 2025-08-09 at 05 23 39_d8979c29](https://github.com/user-attachments/assets/a53b0e8b-d679-49ca-b4a4-0b90fbda73f8)
+
+Loading Screen
+
+
+![WhatsApp Image 2025-08-09 at 05 28 21_502817b9](https://github.com/user-attachments/assets/0926925b-e827-418e-bd49-90533a9c18e4)
+
+Home Screen
+
+
+
+
+![WhatsApp Image 2025-08-09 at 05 22 55_b804c618](https://github.com/user-attachments/assets/3598e272-17e0-45ab-8c12-16f8bc505135)
+
+Inserting Image
+
+
+
+
+![WhatsApp Image 2025-08-09 at 05 22 54_06893f5f](https://github.com/user-attachments/assets/a4e5f7d2-3d06-44c4-ae22-2eae97c14331)
+
+
+Image Analysed
+
+
+![WhatsApp Image 2025-08-09 at 05 22 54_d42ad326](https://github.com/user-attachments/assets/2e627529-1e31-4dc5-a1ff-c2315ac49dbc)
+
+
+Image 2 Analyse
+
+
+![WhatsApp Image 2025-08-09 at 05 22 53_05e987a2](https://github.com/user-attachments/assets/b6cda3e6-d0ff-43f7-9ae5-c7b1bc95490f)
+
+
+Image 3 Analyse
+
+
+![WhatsApp Image 2025-08-09 at 05 22 53_b019689c](https://github.com/user-attachments/assets/7e087429-9438-4225-9a26-fdd1f70b90ff)
+
+
+Image 4 Analyse
 
 # Diagrams
-![Workflow](Add your workflow/architecture diagram here)
-*Add caption explaining your workflow*
+
+*<img width="3840" height="2528" alt="Architecture Diagram" src="https://github.com/user-attachments/assets/00b939f2-2e9a-4625-9b3b-3671f2f3a7d7" />
 
 
 ### Project Demo
-# Video
-[Add your demo video link here]
-*Explain what the video demonstrates*
+
+https://github.com/user-attachments/assets/a9e52e5f-07a9-489b-9ebb-e7ebead453b0
+
+
+
 
 
 
